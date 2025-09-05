@@ -3,19 +3,26 @@ import os
 from dotenv import load_dotenv
 from datetime import timedelta
 
+# --------------------------
+# Base setup
+# --------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# load env file
+# Load .env file
 load_dotenv(BASE_DIR / ".env")
 
+# --------------------------
 # Security
+# --------------------------
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
 
-# Apps
+# --------------------------
+# Installed apps
+# --------------------------
 INSTALLED_APPS = [
     "corsheaders",
     "django.contrib.admin",
@@ -34,10 +41,13 @@ INSTALLED_APPS = [
     "motivation",
 ]
 
+# --------------------------
+# Middleware
+# --------------------------
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # serve static files in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -46,8 +56,14 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# --------------------------
+# Auth
+# --------------------------
 AUTH_USER_MODEL = "authentication.User"
 
+# --------------------------
+# REST Framework
+# --------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -59,8 +75,15 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
 
+# --------------------------
+# URLs and WSGI
+# --------------------------
 ROOT_URLCONF = "core.urls"
+WSGI_APPLICATION = "core.wsgi.application"
 
+# --------------------------
+# Templates
+# --------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -76,32 +99,31 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "core.wsgi.application"
-
+# --------------------------
 # Database
-
+# --------------------------
 if DEBUG:
     DATABASES = {
-        'default':
-            {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": os.getenv("DB_HOST"),
+            "PORT": os.getenv("DB_PORT"),
         }
     }
 
+# --------------------------
 # Password validation
+# --------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -109,17 +131,26 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# --------------------------
 # Internationalization
+# --------------------------
 LANGUAGE_CODE = "en-us"
 USE_I18N = True
 USE_TZ = True
 TIME_ZONE = os.getenv("TIME_ZONE", "Africa/Cairo")
 
-# Static files
+# --------------------------
+# Static & media files
+# --------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Enable WhiteNoise compression & caching
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# --------------------------
+# Default primary key
+# --------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
