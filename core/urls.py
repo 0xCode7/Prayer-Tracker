@@ -10,9 +10,9 @@ urlpatterns = [
     path('api/prayers/', include('prayers.urls')),
     path('api/groups/', include('groups.urls')),
     # YOUR PATTERNS
-    path('download/', SpectacularAPIView.as_view(), name='schema-yaml'),
+    path('download/', SpectacularAPIView.as_view(), name='schema'),
     # Optional UI:
-    path('', SpectacularSwaggerView.as_view(url_name='schema'), name='schema-ui'),
+    path('', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 
 ]
 
