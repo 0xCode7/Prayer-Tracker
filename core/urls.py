@@ -9,6 +9,7 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/prayers/', include('prayers.urls')),
     path('api/groups/', include('groups.urls')),
+    path('api/badges/', include('achievements.urls')),
     # YOUR PATTERNS
     path('download/', SpectacularAPIView.as_view(), name='schema'),
     # Optional UI:

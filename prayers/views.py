@@ -34,22 +34,46 @@ class TodayPrayersView(APIView):
             "prayers": serializer.data
         })
 
+
 class WeekPrayersView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         today = date.today()
-        start_week = today - timedelta(days=today.weekday())
+        start_week = today - timedelta(days=today.weekday())  # Monday
         end_week = start_week + timedelta(days=6)
 
-        logs = PrayerLog.objects.filter(user=request.user, date__range=[start_week, end_week])
-        serializer = PrayerLogSerializer(logs, many=True)
+        # كل صلوات الأسبوع
+        logs = PrayerLog.objects.filter(
+            user=request.user,
+            date__range=[start_week, end_week]
+        ).order_by("date")
+
+        # ترتيب الصلوات
+        prayer_order = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
+
+        # تجهيز response
+        prayers_data = []
+        for i in range(7):
+            day_date = start_week + timedelta(days=i)
+            day_logs = logs.filter(date=day_date)
+
+            prayed_list = []
+            for prayer in prayer_order:
+                log = next((l for l in day_logs if l.prayer == prayer), None)
+                prayed_list.append(log.prayed if log else False)
+
+            prayers_data.append({
+                "day": day_date.strftime("%a"),  # Mon, Tue, ...
+                "date": str(day_date),
+                "prayed": prayed_list
+            })
 
         return Response({
             "start_week": start_week,
             "end_week": end_week,
-            "count": logs.count(),
-            "prayers": serializer.data
+            "total_prayed": logs.filter(prayed=True).count(),
+            "prayers": prayers_data
         })
 
 
@@ -60,12 +84,41 @@ class MonthPrayersView(APIView):
         today = localdate()
         start_month = today.replace(day=1)
 
-        logs = PrayerLog.objects.filter(user=request.user, date__gte=start_month, date__lte=today)
+        # حساب آخر يوم في الشهر
+        if today.month == 12:
+            next_month = today.replace(year=today.year + 1, month=1, day=1)
+        else:
+            next_month = today.replace(month=today.month + 1, day=1)
+        end_month = next_month - timedelta(days=1)
 
-        serializer = PrayerLogSerializer(logs, many=True)
+        # جميع السجلات للشهر
+        logs = PrayerLog.objects.filter(
+            user=request.user,
+            date__range=[start_month, end_month]
+        ).order_by("date")
+
+        prayer_order = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
+
+        prayers_data = []
+        current_day = start_month
+        while current_day <= end_month:
+            day_logs = logs.filter(date=current_day)
+
+            prayed_list = []
+            for prayer in prayer_order:
+                log = next((l for l in day_logs if l.prayer == prayer), None)
+                prayed_list.append(log.prayed if log else False)
+
+            prayers_data.append({
+                "date": str(current_day),
+                "prayed": prayed_list
+            })
+
+            current_day += timedelta(days=1)
 
         return Response({
-            "month": today.strftime("%B %Y"),
-            "count": logs.count(),
-            "prayers": serializer.data
+            "start_month": str(start_month),
+            "end_month": str(end_month),
+            "total_prayed": logs.filter(prayed=True).count(),
+            "prayers": prayers_data
         })
